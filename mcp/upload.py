@@ -4,6 +4,7 @@ Provides functionality to upload MCP (Model Context Protocol) server
 configurations to a remote registry or endpoint.
 """
 
+import copy
 import json
 import os
 import urllib.request
@@ -86,8 +87,8 @@ class MCPConfig:
         return True
 
     def to_dict(self) -> dict:
-        """Return the configuration as a dictionary."""
-        return dict(self._config)
+        """Return a deep copy of the configuration as a dictionary."""
+        return copy.deepcopy(self._config)
 
     def to_json(self) -> str:
         """Return the configuration as a JSON string."""
