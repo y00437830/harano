@@ -1,105 +1,114 @@
 # harano
 
-**harano** is a Python library that provides two core building blocks for AI agent platforms:
+**harano** is a Skill and MCP (Model Context Protocol) marketplace platform.
 
-1. **Skill system** – a typed, registry-backed framework for defining and executing reusable AI capabilities.
-2. **MCP Market** – a lightweight marketplace for managing [Model Context Protocol (MCP)](https://modelcontextprotocol.io) servers.
+- **Backend** – Java 17 / Spring Boot 3 REST API
+- **Frontend** – TypeScript / React (Vite)
 
 ---
 
-## Installation
+## Project structure
+
+```
+harano/
+├── backend/          # Java Spring Boot REST API
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/com/harano/
+│       │   ├── HaranoApplication.java
+│       │   ├── skill/          # Skill CRUD + registry
+│       │   │   ├── Skill.java
+│       │   │   ├── SkillParameter.java
+│       │   │   ├── SkillService.java
+│       │   │   └── SkillController.java
+│       │   └── mcp/            # MCP marketplace
+│       │       ├── MCPServer.java
+│       │       ├── MCPServerStatus.java
+│       │       ├── MCPMarketService.java
+│       │       └── MCPMarketController.java
+│       └── test/java/com/harano/
+│           ├── skill/SkillServiceTest.java
+│           └── mcp/MCPMarketServiceTest.java
+└── frontend/         # TypeScript / React (Vite)
+    ├── package.json
+    ├── vite.config.ts
+    └── src/
+        ├── types/        # skill.ts, mcp.ts
+        ├── api/          # skillApi.ts, mcpApi.ts
+        ├── components/   # SkillList.tsx, MCPMarket.tsx
+        ├── App.tsx
+        └── main.tsx
+```
+
+---
+
+## Backend
+
+### Run
 
 ```bash
-pip install harano
+cd backend
+mvn spring-boot:run
+# API available at http://localhost:8080
 ```
 
----
-
-## Skill system
-
-A **Skill** is a self-contained, named unit of computation.  Each skill declares its input parameters via `SkillMetadata` and carries out work in `execute()`.
-
-```python
-from harano.skill import Skill, SkillMetadata, SkillParameter, SkillRegistry
-from harano.skill.models import ParameterType
-
-# 1. Define a skill
-class GreetSkill(Skill):
-    metadata = SkillMetadata(
-        name="greet",
-        description="Returns a greeting message.",
-        parameters=[
-            SkillParameter(name="name", type=ParameterType.STRING),
-        ],
-    )
-
-    def execute(self, **kwargs):
-        return f"Hello, {kwargs['name']}!"
-
-# 2. Register it
-registry = SkillRegistry()
-registry.register(GreetSkill)   # or use as a decorator: @registry.register
-
-# 3. Look up and run
-skill = registry.get("greet")()
-print(skill.execute(name="World"))   # Hello, World!
-```
-
-### SkillRegistry API
-
-| Method | Description |
-|---|---|
-| `register(skill_class)` | Register a `Skill` subclass (usable as a decorator). |
-| `get(name)` | Return the class registered under `name`. |
-| `unregister(name)` | Remove a skill from the registry. |
-| `list_skills()` | Sorted list of registered skill names. |
-
----
-
-## MCP Market
-
-The MCP Market lets you publish, browse, install, and uninstall MCP servers.
-
-```python
-from harano.mcp_market import MCPMarket, MCPServer
-
-market = MCPMarket()
-
-# Publish servers to the catalog
-market.publish(MCPServer(id="weather", name="Weather API", tags=["weather", "api"]))
-market.publish(MCPServer(id="code-fmt", name="Code Formatter", tags=["dev"]))
-
-# Browse
-print([s.id for s in market.list_available()])   # ['code-fmt', 'weather']
-print([s.id for s in market.search("weather")])  # ['weather']
-
-# Install
-market.install("weather")
-print(market.is_installed("weather"))             # True
-
-# Uninstall
-market.uninstall("weather")
-```
-
-### MCPMarket API
-
-| Method | Description |
-|---|---|
-| `publish(server)` | Add a server to the marketplace catalog. |
-| `unpublish(server_id)` | Remove a server (also uninstalls if installed). |
-| `list_available()` | All catalog entries not yet installed. |
-| `search(query)` | Free-text search across name, description, and tags. |
-| `install(server_id)` | Install a catalog server locally. |
-| `uninstall(server_id)` | Uninstall a previously installed server. |
-| `list_installed()` | All currently installed servers. |
-| `is_installed(server_id)` | Check installation status. |
-| `get_installed(server_id)` | Get the installed `MCPServer` entry. |
-
----
-
-## Development
+### Test
 
 ```bash
-pip install -e ".[dev]"
-pytest
+cd backend
+mvn test
 ```
+
+### REST API
+
+#### Skills  `GET /api/skills`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/skills` | List all skills (optional `?q=` search) |
+| GET | `/api/skills/{id}` | Get skill by id |
+| POST | `/api/skills` | Register a new skill |
+| PUT | `/api/skills/{id}` | Update a skill |
+| DELETE | `/api/skills/{id}` | Delete a skill |
+
+#### MCP Market  `GET /api/mcp`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/mcp` | List all servers (optional `?q=` search, `?availableOnly=true`) |
+| GET | `/api/mcp/{id}` | Get server by id |
+| POST | `/api/mcp` | Publish a server |
+| DELETE | `/api/mcp/{id}` | Unpublish a server |
+| GET | `/api/mcp/installed` | List installed servers |
+| POST | `/api/mcp/{id}/install` | Install a server |
+| DELETE | `/api/mcp/{id}/install` | Uninstall a server |
+
+---
+
+## Frontend
+
+### Run (development)
+
+```bash
+cd frontend
+npm install
+npm run dev
+# UI available at http://localhost:5173
+```
+
+The Vite dev server proxies `/api/*` requests to the Spring Boot backend at `http://localhost:8080`.
+
+### Test
+
+```bash
+cd frontend
+npm test
+```
+
+### Build
+
+```bash
+cd frontend
+npm run build
+```
+
