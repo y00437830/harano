@@ -1,5 +1,6 @@
 package com.harano.mcp;
 
+import com.harano.SearchUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -53,13 +54,7 @@ public class MCPMarketService {
     }
 
     public List<MCPServer> search(String query) {
-        String q = query.toLowerCase(Locale.ROOT);
-        return catalog.values().stream()
-                .filter(s -> s.getName().toLowerCase(Locale.ROOT).contains(q)
-                        || s.getDescription().toLowerCase(Locale.ROOT).contains(q)
-                        || s.getTags().stream().anyMatch(t -> t.toLowerCase(Locale.ROOT).contains(q)))
-                .sorted(Comparator.comparing(MCPServer::getId))
-                .collect(Collectors.toList());
+        return SearchUtils.search(catalog.values(), query);
     }
 
     // ------------------------------------------------------------------

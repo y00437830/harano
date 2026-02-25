@@ -1,10 +1,12 @@
 package com.harano.mcp;
 
+import com.harano.TextSearchable;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /** Describes a single MCP server available in the marketplace. */
-public class MCPServer {
+public class MCPServer implements TextSearchable {
 
     private String id;
     private String name;

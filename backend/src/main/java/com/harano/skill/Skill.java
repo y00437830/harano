@@ -1,10 +1,12 @@
 package com.harano.skill;
 
+import com.harano.TextSearchable;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /** Metadata that describes a Skill. */
-public class Skill {
+public class Skill implements TextSearchable {
 
     private String id;
     private String name;

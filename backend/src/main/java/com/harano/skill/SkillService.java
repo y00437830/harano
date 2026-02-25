@@ -1,5 +1,6 @@
 package com.harano.skill;
 
+import com.harano.SearchUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -48,12 +49,6 @@ public class SkillService {
     }
 
     public List<Skill> search(String query) {
-        String q = query.toLowerCase(Locale.ROOT);
-        return skills.values().stream()
-                .filter(s -> s.getName().toLowerCase(Locale.ROOT).contains(q)
-                        || s.getDescription().toLowerCase(Locale.ROOT).contains(q)
-                        || s.getTags().stream().anyMatch(t -> t.toLowerCase(Locale.ROOT).contains(q)))
-                .sorted(Comparator.comparing(Skill::getId))
-                .collect(Collectors.toList());
+        return SearchUtils.search(skills.values(), query);
     }
 }

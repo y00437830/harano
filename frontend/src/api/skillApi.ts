@@ -1,41 +1,33 @@
 import type { Skill, SkillPayload } from '../types/skill'
+import { apiRequest, JSON_HEADERS } from './apiUtils'
 
 const BASE = '/api/skills'
 
-export async function listSkills(query?: string): Promise<Skill[]> {
+export function listSkills(query?: string): Promise<Skill[]> {
   const url = query ? `${BASE}?q=${encodeURIComponent(query)}` : BASE
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Failed to list skills: ${res.status}`)
-  return res.json() as Promise<Skill[]>
+  return apiRequest<Skill[]>(url)
 }
 
-export async function getSkill(id: string): Promise<Skill> {
-  const res = await fetch(`${BASE}/${encodeURIComponent(id)}`)
-  if (!res.ok) throw new Error(`Skill not found: ${id}`)
-  return res.json() as Promise<Skill>
+export function getSkill(id: string): Promise<Skill> {
+  return apiRequest<Skill>(`${BASE}/${encodeURIComponent(id)}`)
 }
 
-export async function createSkill(payload: SkillPayload): Promise<Skill> {
-  const res = await fetch(BASE, {
+export function createSkill(payload: SkillPayload): Promise<Skill> {
+  return apiRequest<Skill>(BASE, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: JSON_HEADERS,
     body: JSON.stringify(payload),
   })
-  if (!res.ok) throw new Error(`Failed to create skill: ${res.status}`)
-  return res.json() as Promise<Skill>
 }
 
-export async function updateSkill(id: string, payload: SkillPayload): Promise<Skill> {
-  const res = await fetch(`${BASE}/${encodeURIComponent(id)}`, {
+export function updateSkill(id: string, payload: SkillPayload): Promise<Skill> {
+  return apiRequest<Skill>(`${BASE}/${encodeURIComponent(id)}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: JSON_HEADERS,
     body: JSON.stringify(payload),
   })
-  if (!res.ok) throw new Error(`Failed to update skill: ${res.status}`)
-  return res.json() as Promise<Skill>
 }
 
-export async function deleteSkill(id: string): Promise<void> {
-  const res = await fetch(`${BASE}/${encodeURIComponent(id)}`, { method: 'DELETE' })
-  if (!res.ok) throw new Error(`Failed to delete skill: ${res.status}`)
+export function deleteSkill(id: string): Promise<void> {
+  return apiRequest<void>(`${BASE}/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
