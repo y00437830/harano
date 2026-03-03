@@ -36,6 +36,68 @@ class MCPMarketServiceTest {
     }
 
     @Test
+    void publish_preservesAllFields() {
+        MCPServer server = new MCPServer("s1", "My Server", "2.0.0", "desc", "alice");
+        server.setHomepage("https://example.com");
+        server.setTags(List.of("ai", "ml"));
+        MCPServer published = service.publish(server);
+        assertEquals("s1", published.getId());
+        assertEquals("My Server", published.getName());
+        assertEquals("2.0.0", published.getVersion());
+        assertEquals("desc", published.getDescription());
+        assertEquals("alice", published.getAuthor());
+        assertEquals("https://example.com", published.getHomepage());
+        assertEquals(List.of("ai", "ml"), published.getTags());
+        assertEquals(MCPServerStatus.AVAILABLE, published.getStatus());
+    }
+
+    @Test
+    void publish_returnsServerWithAvailableStatus() {
+        MCPServer server = makeServer("s1", "S1");
+        server.setStatus(MCPServerStatus.INSTALLED);
+        MCPServer published = service.publish(server);
+        assertEquals(MCPServerStatus.AVAILABLE, published.getStatus());
+    }
+
+    @Test
+    void publish_appearsInListAll() {
+        service.publish(makeServer("s1", "S1"));
+        List<MCPServer> all = service.listAll();
+        assertEquals(1, all.size());
+        assertEquals("s1", all.get(0).getId());
+    }
+
+    @Test
+    void publish_multipleServers() {
+        service.publish(makeServer("s1", "Server One"));
+        service.publish(makeServer("s2", "Server Two"));
+        service.publish(makeServer("s3", "Server Three"));
+        assertEquals(3, service.listAll().size());
+    }
+
+    @Test
+    void publish_thenSearchByTag() {
+        MCPServer server = makeServer("s1", "S1");
+        server.setTags(List.of("data", "weather"));
+        service.publish(server);
+        List<MCPServer> results = service.search("weather");
+        assertEquals(1, results.size());
+        assertEquals("s1", results.get(0).getId());
+    }
+
+    @Test
+    void publish_thenSearchByDescription() {
+        service.publish(makeServer("s1", "S1"));
+        List<MCPServer> results = service.search("test server");
+        assertEquals(1, results.size());
+    }
+
+    @Test
+    void unpublish_unknown_throws() {
+        assertThrows(NoSuchElementException.class, () -> service.unpublish("nonexistent"));
+    }
+
+    @Test
     void findById_unknown_throws() {
         assertThrows(NoSuchElementException.class, () -> service.findById("x"));
     }

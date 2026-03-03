@@ -70,6 +70,63 @@ describe('mcpApi', () => {
     expect(spy).toHaveBeenCalledWith('/api/mcp', expect.objectContaining({ method: 'POST' }))
   })
 
+  it('publishMCPServer sends JSON content-type header', async () => {
+    const spy = mockFetch(mockServer, 201)
+    vi.stubGlobal('fetch', spy)
+    const { status: _s, ...payload } = mockServer
+    await publishMCPServer(payload)
+    expect(spy).toHaveBeenCalledWith('/api/mcp', expect.objectContaining({
+      headers: { 'Content-Type': 'application/json' },
+    }))
+  })
+
+  it('publishMCPServer sends correct body', async () => {
+    const spy = mockFetch(mockServer, 201)
+    vi.stubGlobal('fetch', spy)
+    const { status: _s, ...payload } = mockServer
+    await publishMCPServer(payload)
+    const callBody = JSON.parse(spy.mock.calls[0][1].body)
+    expect(callBody.id).toBe('weather')
+    expect(callBody.name).toBe('Weather API')
+    expect(callBody.version).toBe('1.0.0')
+    expect(callBody.author).toBe('acme')
+    expect(callBody.tags).toEqual(['weather'])
+  })
+
+  it('publishMCPServer returns the published server', async () => {
+    vi.stubGlobal('fetch', mockFetch(mockServer, 201))
+    const { status: _s, ...payload } = mockServer
+    const result = await publishMCPServer(payload)
+    expect(result.id).toBe('weather')
+    expect(result.name).toBe('Weather API')
+    expect(result.status).toBe('AVAILABLE')
+  })
+
+  it('publishMCPServer with homepage sends full payload', async () => {
+    const serverWithHomepage: MCPServer = {
+      ...mockServer,
+      homepage: 'https://example.com',
+    }
+    const spy = mockFetch(serverWithHomepage, 201)
+    vi.stubGlobal('fetch', spy)
+    const { status: _s, ...payload } = serverWithHomepage
+    await publishMCPServer(payload)
+    const callBody = JSON.parse(spy.mock.calls[0][1].body)
+    expect(callBody.homepage).toBe('https://example.com')
+  })
+
+  it('publishMCPServer throws on 409 conflict', async () => {
+    vi.stubGlobal('fetch', mockFetch(null, 409))
+    const { status: _s, ...payload } = mockServer
+    await expect(publishMCPServer(payload)).rejects.toThrow()
+  })
+
+  it('publishMCPServer throws on 500 server error', async () => {
+    vi.stubGlobal('fetch', mockFetch(null, 500))
+    const { status: _s, ...payload } = mockServer
+    await expect(publishMCPServer(payload)).rejects.toThrow()
+  })
+
   it('unpublishMCPServer deletes /api/mcp/:id', async () => {
     const spy = vi.fn().mockResolvedValue({ ok: true, status: 204 })
     vi.stubGlobal('fetch', spy)
